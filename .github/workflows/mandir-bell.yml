@@ -1,0 +1,45 @@
+name: Mandir Bell (scheduled)
+
+# Runs at 02:30 UTC (08:00 IST) and 16:30 UTC (22:00 IST)
+on:
+  schedule:
+    - cron: "30 2 * * *"   # 02:30 UTC = 08:00 IST
+    - cron: "30 16 * * *"  # 16:30 UTC = 22:00 IST
+  workflow_dispatch:       # manual trigger for testing
+
+jobs:
+  send-bell:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Send bell voice and message to Telegram
+        env:
+          TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          # path to your bell file in repo root
+          FILE="bell.ogg"
+          if [ ! -f "$FILE" ]; then
+            echo "bell.ogg not found in repo root. Failing."
+            exit 1
+          fi
+
+          # send voice (multipart/form-data)
+          RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendVoice" \
+            -F chat_id="${CHAT_ID}" \
+            -F voice=@"${FILE}" \
+            -F caption="🙏 રાધે કૃષ્ણ 🙏")
+
+          echo "Telegram response: $RESPONSE"
+
+          # optional: check for success
+          ok=$(echo "$RESPONSE" | jq -r '.ok')
+          if [ "$ok" != "true" ]; then
+            echo "Telegram API returned error:"
+            echo "$RESPONSE"
+            exit 1
+          fi
