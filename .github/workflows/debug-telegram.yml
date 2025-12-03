@@ -1,0 +1,22 @@
+name: Debug Telegram Bot
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print getMe
+        env:
+          TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+        run: |
+          echo "=== getMe ==="
+          curl -s "https://api.telegram.org/bot${TOKEN}/getMe" | jq .
+
+      - name: Print getUpdates (last 100)
+        env:
+          TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+        run: |
+          echo "=== getUpdates ==="
+          curl -s "https://api.telegram.org/bot${TOKEN}/getUpdates?limit=100" | jq .
